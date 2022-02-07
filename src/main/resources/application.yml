@@ -1,0 +1,21 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/anime}
+
+spring:
+  application:
+    name: ${APPLICATION_NAME:anime}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      atlas:
+        enabled: false
