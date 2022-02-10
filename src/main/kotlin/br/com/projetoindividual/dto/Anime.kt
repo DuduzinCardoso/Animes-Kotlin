@@ -1,7 +1,7 @@
 package br.com.projetoindividual.dto
 
 data class Anime(
-    val nome: String,
-    var personagens: ArrayList<Personagem>? = null,
-    var criadores: ArrayList<Criador>? = null,
+    var nome: String,
+    var personagens: ArrayList<Personagem>,
+    var criadores: ArrayList<Criador>,
 )

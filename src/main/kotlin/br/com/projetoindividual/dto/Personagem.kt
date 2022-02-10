@@ -1,6 +1,6 @@
 package br.com.projetoindividual.dto
 
 data class Personagem(
-    val nome: String,
+    var nome: String,
     val genero: String
 )
