@@ -82,8 +82,13 @@ class AnimeController(
         if (nomeDoAnime != null){
             if (nomeDoPersonagem != null){
                 nomeDoPersonagem.nome = nomePersonagem
-
             }
+            else{
+                return "Personagem $nomePersonagem não encontrado!"
+            }
+        }
+        else{
+            return "Anime $animeNome não encontrado!"
         }
         return "Personagem $nomePersonagem atualizado com sucesso"
     }
