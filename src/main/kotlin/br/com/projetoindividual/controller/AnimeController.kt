@@ -21,12 +21,12 @@ class AnimeController(
         return animesDtos
     }
 
-    @GetMapping("/info/{nome}")
+    @GetMapping("/info/anime/{nome}")
     fun getAnime(@PathVariable("nome") nome: String): AnimeDto? {
         return animesDtos.firstOrNull { anime -> anime.nome == nome }
     }
 
-    @PostMapping("/create")
+    @PostMapping("/anime/create")
     fun createAnime(@RequestBody anime: AnimeRequestDto): String {
         animesDtos.add(
             AnimeDto(
@@ -40,32 +40,39 @@ class AnimeController(
         return "Anime ${anime.nome.trim()} criado com sucesso!"
     }
 
-    @DeleteMapping("/excluir/{idNome}")
-    fun deleteAnime(@PathVariable("idNome") nome: UUID): String? {
-        animesDtos.removeIf { anime -> anime.id == nome }
+    @DeleteMapping("/excluir/{idAnime}")
+    fun deleteAnime(@PathVariable("idAnime") nomeAnime: UUID): String? {
+        animesDtos.removeIf { anime -> anime.id == nomeAnime }
         return "Anime excluído com sucesso!"
     }
 
-    @DeleteMapping("/excluir/{idAnime}/{idCriador}")
+    @DeleteMapping("/excluir/criador/{idAnime}/{idCriador}")
     fun deleteCriador(
-        @PathVariable("idCriador") nomeOne: UUID,
-        @PathVariable("idAnime") nomeTwo: UUID
+        @PathVariable("idCriador") idCriador: UUID,
+        @PathVariable("idAnime") idAnime: UUID
     ): String {
-
-//        val foundedAnime: AnimeDto? =
-
-//        animeDtos.removeIf { anime -> anime.id == nomeTwo }
-
         animesDtos
-            .firstOrNull { animeDto -> animeDto.id == nomeTwo }!!
-            .criadores.removeIf { criador -> criador.id == nomeOne }
+            .firstOrNull { animeDto -> animeDto.id == idAnime }!!
+            .criadores.removeIf { criador -> criador.id == idCriador }
 
         return "Criador excluído com sucesso!"
     }
 
+    @DeleteMapping("/excluir/personagem/{idAnime}/{idPersonagem}")
+    fun deletePersonagem(
+        @PathVariable("idPersonagem") idPersonagem: UUID,
+        @PathVariable("idAnime") idAnime: UUID
+    ): String {
+        animesDtos
+            .firstOrNull { animeDto -> animeDto.id == idAnime }!!
+            .personagens.removeIf { personagem -> personagem.id == idPersonagem }
+
+        return "Personagem excluído com sucesso!"
+    }
 
     @PostMapping("/create/personagem/{idAnime}")
-    fun createPersonagem(@RequestBody personagem: PersonagemRequestDto, @PathVariable("idAnime") idAnime: UUID): String {
+    fun createPersonagem(@RequestBody personagem: PersonagemRequestDto, @PathVariable("idAnime")
+    idAnime: UUID): String {
         val animeF = animesDtos.firstOrNull { anime -> anime.id == idAnime }
 
         if (animeF != null) {
@@ -102,7 +109,7 @@ class AnimeController(
     @PatchMapping("/update/{idAnime}/{novoNomeCriador}/{idCriador}")
     fun updateCriador(
         @PathVariable ("novoNomeCriador")novoNomeDoCriador: String,
-        @PathVariable("idCriador") idCriador:UUID,
+        @PathVariable("idCriador") idCriador: UUID,
         @PathVariable("idAnime") idAnime: UUID
     ): String {
         val nomeDoAnime = animesDtos.firstOrNull { anime -> anime.id == idAnime }
