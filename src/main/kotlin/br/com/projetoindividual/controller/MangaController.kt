@@ -1,16 +1,7 @@
 package br.com.projetoindividual.controller
 
-import br.com.projetoindividual.dto.EscritorDto
-import br.com.projetoindividual.dto.EscritorRequestDto
-import br.com.projetoindividual.dto.MangaDto
-import br.com.projetoindividual.dto.MangaRequestDto
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import br.com.projetoindividual.dto.*
+import org.springframework.web.bind.annotation.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -34,7 +25,7 @@ class MangaController (
             MangaDto(
                 id = UUID.randomUUID(),
                 nome = manga.nome.trim(),
-                personagens = ArrayList(),
+                editoras = ArrayList(),
                 escritores = ArrayList()
             )
         )
@@ -45,6 +36,30 @@ class MangaController (
         mangasDtos.removeIf { manga -> manga.id ==nomeManga }
         return "Manga excluído com sucesso!"
     }
+    @DeleteMapping("/excluir/escritor/{idManga}/{idEscritor}")
+    fun deleteEscritor(
+        @PathVariable("idEscritor") idEscritor: UUID,
+        @PathVariable("idManga") idManga: UUID
+    ): String {
+        mangasDtos
+            .firstOrNull { mangaDto -> mangaDto.id == idManga }!!
+            .escritores.removeIf { escritor -> escritor.id == idEscritor}
+
+        return "Escritor excluído com sucesso!"
+    }
+
+    @DeleteMapping("/excluir/editora/{idManga}/{idEditora}")
+    fun deleteEditora(
+        @PathVariable("idEditora") idEditora: UUID,
+        @PathVariable("idManga") idManga: UUID
+    ): String {
+        mangasDtos
+            .firstOrNull { mangaDto -> mangaDto.id == idManga }!!
+            .editoras.removeIf { editora -> editora.id == idEditora}
+
+        return "Editora excluído com sucesso!"
+    }
+
     @PostMapping("/create/escritor/{idManga}")
     fun createEscritor(@RequestBody escritor: EscritorRequestDto, @PathVariable("idManga")
     idManga: UUID): String{
@@ -62,7 +77,42 @@ class MangaController (
         }else{
             return "Manga não encontrado"
         }
-        return "Escritor ${escritor.nome} criado com sucesso!"
+        return "Escritor(a) ${escritor.nome} criado(a) com sucesso!"
     }
+    @PostMapping("/create/editora/{idManga}")
+    fun createEditora(@RequestBody editora: EditoraRequestDto, @PathVariable("idManga")
+    idManga: UUID): String{
+        val mangaEdito = mangasDtos.firstOrNull { manga -> manga.id== idManga}
 
+        if (mangaEdito != null){
+            mangaEdito.editoras.add(
+                EditoraDto(
+                    id = UUID.randomUUID(),
+                    nome = editora.nome,
+                    pais = editora.pais,
+                    fundada = editora.fundada,
+                )
+            )
+        }else{
+            return "Manga não encontrado"
+        }
+        return "Editora ${editora.nome} criado(a) com sucesso!"
+    }
+    @PatchMapping("/update/{idManga}/{novoNomeEditora}/{idEditora}")
+    fun updateEditora(
+        @PathVariable ("novoNomeEditora")novoNomeDaEditora: String,
+        @PathVariable("idEditora") idEditora: UUID,
+        @PathVariable("idManga") idManga: UUID
+    ): String {
+        val nomeDoManga = mangasDtos.firstOrNull { manga -> manga.id == idManga }
+        val nomeDaEditora = nomeDoManga!!.editoras.firstOrNull { editora-> editora.id == idEditora}
+
+        if (nomeDaEditora != null){
+            nomeDaEditora.nome = novoNomeDaEditora
+        }
+        else{
+            return "Editora não encontrada!"
+        }
+        return "Editora atualizada com sucesso"
+    }
 }

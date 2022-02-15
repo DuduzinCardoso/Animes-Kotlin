@@ -6,6 +6,6 @@ import kotlin.collections.ArrayList
 data class MangaDto(
     var id: UUID,
     var nome: String,
-    var personagens: ArrayList<PersonagemDto>,
+    var editoras: ArrayList<EditoraDto>,
     var escritores: ArrayList<EscritorDto>,
 )
