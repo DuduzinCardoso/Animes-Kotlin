@@ -115,4 +115,21 @@ class MangaController (
         }
         return "Editora atualizada com sucesso"
     }
+    @PatchMapping("/update/{idManga}/{novoNomeEscritor}/{idEscritor}")
+    fun updateEscritor(
+        @PathVariable ("novoNomeEscritor")novoNomeDoEscritor: String,
+        @PathVariable("idEscritor") idEscritor: UUID,
+        @PathVariable("idManga") idManga: UUID
+    ): String {
+        val nomeDoManga = mangasDtos.firstOrNull { manga -> manga.id == idManga }
+        val nomeDoEscritor = nomeDoManga!!.escritores.firstOrNull { escritor -> escritor.id == idEscritor}
+
+        if (nomeDoEscritor != null){
+            nomeDoEscritor.nome = novoNomeDoEscritor
+        }
+        else{
+            return "Escritor(a) não encontrada!"
+        }
+        return "Escritor(a) atualizado(a) com sucesso"
+    }
 }
