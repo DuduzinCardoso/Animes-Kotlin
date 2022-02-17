@@ -9,7 +9,7 @@ import kotlin.collections.ArrayList
 @RequestMapping("/mangas")
 class MangaController (
     var mangasDtos: ArrayList<MangaDto>
-    ){
+) {
     @GetMapping("/get-mangas")
     fun getListManga(): List<MangaDto>{
         return mangasDtos
@@ -19,6 +19,7 @@ class MangaController (
     fun getAnime(@PathVariable("nome") nome: String): MangaDto? {
         return mangasDtos.firstOrNull { manga -> manga.nome == nome }
     }
+
     @PostMapping("/manga/create")
     fun createManga(@RequestBody manga: MangaRequestDto): String {
         mangasDtos.add(
@@ -31,33 +32,55 @@ class MangaController (
         )
         return "Manga ${manga.nome.trim()} criado com sucesso!"
     }
+
     @DeleteMapping("/excluir/{idManga}")
     fun deleteManga(@PathVariable("idManga") nomeManga: UUID): String?{
         mangasDtos.removeIf { manga -> manga.id ==nomeManga }
         return "Manga excluído com sucesso!"
     }
-    @DeleteMapping("/excluir/escritor/{idManga}/{idEscritor}")
-    fun deleteEscritor(
-        @PathVariable("idEscritor") idEscritor: UUID,
-        @PathVariable("idManga") idManga: UUID
-    ): String {
-        mangasDtos
-            .firstOrNull { mangaDto -> mangaDto.id == idManga }!!
-            .escritores.removeIf { escritor -> escritor.id == idEscritor}
 
-        return "Escritor excluído com sucesso!"
+    @DeleteMapping("/excluir/escritor")
+    fun deleteEditora(@RequestBody dadosEscritor: DeleteEscritorRequestDto): String {
+
+        val manga = mangasDtos.firstOrNull { manga -> manga.id == dadosEscritor.idManga }
+        var mensagemEscritor = "Escritor(a) excluído(a) com sucesso!"
+
+        if (manga != null){
+            val escritor = manga.escritores.firstOrNull { escritor-> escritor.id == dadosEscritor.idEscritor }
+
+            if (escritor!= null) {
+                manga.escritores.removeIf { escritor.id == dadosEscritor.idEscritor}
+            }
+            else{
+                mensagemEscritor = "Escritor(a) não encontrado(a)!"
+            }
+        } else{
+            mensagemEscritor = "Manga não encontrado!"
+        }
+
+        return mensagemEscritor
     }
 
-    @DeleteMapping("/excluir/editora/{idManga}/{idEditora}")
-    fun deleteEditora(
-        @PathVariable("idEditora") idEditora: UUID,
-        @PathVariable("idManga") idManga: UUID
-    ): String {
-        mangasDtos
-            .firstOrNull { mangaDto -> mangaDto.id == idManga }!!
-            .editoras.removeIf { editora -> editora.id == idEditora}
+    @DeleteMapping("/excluir/editora")
+    fun deleteEditora(@RequestBody dadosEditora: DeleteEditoraRequestDto): String {
 
-        return "Editora excluído com sucesso!"
+        val manga = mangasDtos.firstOrNull { manga -> manga.id == dadosEditora.idManga }
+        var mensagemEditora = "Editora excluída com sucesso!"
+
+        if (manga != null){
+            val editora = manga.editoras.firstOrNull { editora-> editora.id == dadosEditora.idEditora }
+
+            if (editora != null) {
+                manga.editoras.removeIf { editora.id == dadosEditora.idEditora}
+            }
+            else{
+                mensagemEditora = "Editora não encontrada!"
+            }
+        } else{
+            mensagemEditora = "Manga não encontrado!"
+        }
+
+        return mensagemEditora
     }
 
     @PostMapping("/create/escritor/{idManga}")
@@ -77,15 +100,17 @@ class MangaController (
         }else{
             return "Manga não encontrado"
         }
+
         return "Escritor(a) ${escritor.nome} criado(a) com sucesso!"
     }
+
     @PostMapping("/create/editora/{idManga}")
     fun createEditora(@RequestBody editora: EditoraRequestDto, @PathVariable("idManga")
     idManga: UUID): String{
-        val mangaEdito = mangasDtos.firstOrNull { manga -> manga.id== idManga}
+        val mangaEditora = mangasDtos.firstOrNull { manga -> manga.id== idManga}
 
-        if (mangaEdito != null){
-            mangaEdito.editoras.add(
+        if (mangaEditora != null){
+            mangaEditora.editoras.add(
                 EditoraDto(
                     id = UUID.randomUUID(),
                     nome = editora.nome,
@@ -98,38 +123,46 @@ class MangaController (
         }
         return "Editora ${editora.nome} criado(a) com sucesso!"
     }
-    @PatchMapping("/update/{idManga}/{novoNomeEditora}/{idEditora}")
-    fun updateEditora(
-        @PathVariable ("novoNomeEditora")novoNomeDaEditora: String,
-        @PathVariable("idEditora") idEditora: UUID,
-        @PathVariable("idManga") idManga: UUID
-    ): String {
-        val nomeDoManga = mangasDtos.firstOrNull { manga -> manga.id == idManga }
-        val nomeDaEditora = nomeDoManga!!.editoras.firstOrNull { editora-> editora.id == idEditora}
 
-        if (nomeDaEditora != null){
-            nomeDaEditora.nome = novoNomeDaEditora
+    @PatchMapping("/update/editora")
+    fun updateEditora(@RequestBody dadosEditora: UpdateEditoraRequestDto): String {
+        var mensagemEditora = "Editora atualizada com sucesso"
+        val manga = mangasDtos.firstOrNull { manga -> manga.id == dadosEditora.idManga }
+
+        if (manga != null){
+            val editora = manga.editoras.firstOrNull { editora-> editora.id == dadosEditora.idEditora}
+
+            if (editora != null){
+                editora.nome = dadosEditora.nome
+            }
+            else{
+                mensagemEditora = "Editora não encontrada!"
+            }
+        } else{
+            mensagemEditora = "Manga não encontrado!"
         }
-        else{
-            return "Editora não encontrada!"
-        }
-        return "Editora atualizada com sucesso"
+
+        return mensagemEditora
     }
-    @PatchMapping("/update/{idManga}/{novoNomeEscritor}/{idEscritor}")
-    fun updateEscritor(
-        @PathVariable ("novoNomeEscritor")novoNomeDoEscritor: String,
-        @PathVariable("idEscritor") idEscritor: UUID,
-        @PathVariable("idManga") idManga: UUID
-    ): String {
-        val nomeDoManga = mangasDtos.firstOrNull { manga -> manga.id == idManga }
-        val nomeDoEscritor = nomeDoManga!!.escritores.firstOrNull { escritor -> escritor.id == idEscritor}
 
-        if (nomeDoEscritor != null){
-            nomeDoEscritor.nome = novoNomeDoEscritor
+    @PatchMapping("/update/escritor")
+    fun updateEscritor(@RequestBody dadosEscritor: UpdateEscritorRequestDto): String {
+        var mensagemEscritor = "Escritor(a) atualizado(a) com sucesso"
+        val manga = mangasDtos.firstOrNull { manga -> manga.id == dadosEscritor.idManga }
+
+        if (manga != null) {
+            val escritor = manga.escritores.firstOrNull { escritor -> escritor.id == dadosEscritor.idEscritor }
+
+            if (escritor != null) {
+                escritor.nome = dadosEscritor.nome
+            }
+            else {
+                mensagemEscritor = "Escritor(a) não encontrada!"
+            }
+        } else {
+            mensagemEscritor = "Manga não encontrado!"
         }
-        else{
-            return "Escritor(a) não encontrada!"
-        }
-        return "Escritor(a) atualizado(a) com sucesso"
+
+        return mensagemEscritor
     }
 }
