@@ -41,9 +41,17 @@ class AnimeController(
     }
 
     @DeleteMapping("/excluir/{idAnime}")
-    fun deleteAnime(@PathVariable("idAnime") nomeAnime: UUID): String? {
-        animesDtos.removeIf { anime -> anime.id == nomeAnime }
-        return "Anime excluído com sucesso!"
+    fun deleteAnime(@PathVariable("idAnime") idAnime: UUID): String?{
+        var mensagemAnime = "Anime excluído com sucesso!"
+        val anime = animesDtos.firstOrNull { anime -> anime.id == idAnime }
+
+        if(anime != null){
+            animesDtos.removeIf { anime -> anime.id == idAnime }
+        }else{
+            mensagemAnime = "Anime não encontrado!"
+        }
+
+        return mensagemAnime
     }
 
     @DeleteMapping("/excluir/criador")
@@ -56,7 +64,7 @@ class AnimeController(
             val criador = anime.criadores.firstOrNull { criador -> criador.id == dadosCriador.idCriador }
 
             if (criador != null) {
-                anime.criadores.removeIf { criador.id == dadosCriador.idCriador}
+                anime.criadores.removeIf { criador -> criador.id == dadosCriador.idCriador}
             }
             else{
                 mensagemCriador = "Criador(a) não encontrado!"
@@ -78,7 +86,7 @@ class AnimeController(
             val personagem = anime.personagens.firstOrNull { personagem-> personagem.id == dadosPersonagem.idPersonagem }
 
             if (personagem != null) {
-                anime.personagens.removeIf { personagem.id == dadosPersonagem.idPersonagem}
+                anime.personagens.removeIf { personagem -> personagem.id == dadosPersonagem.idPersonagem }
             }
             else{
                 mensagemPersonagem = "Personagem não encontrado!"

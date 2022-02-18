@@ -35,8 +35,16 @@ class MangaController (
 
     @DeleteMapping("/excluir/{idManga}")
     fun deleteManga(@PathVariable("idManga") nomeManga: UUID): String?{
-        mangasDtos.removeIf { manga -> manga.id ==nomeManga }
-        return "Manga excluído com sucesso!"
+        var mensagemManga = "Manga excluído com sucesso!"
+        val manga = mangasDtos.firstOrNull { manga -> manga.id == nomeManga }
+
+        if(manga != null){
+            mangasDtos.removeIf { manga -> manga.id ==nomeManga }
+        }else{
+            mensagemManga = "Manga não encontrado!"
+        }
+
+        return mensagemManga
     }
 
     @DeleteMapping("/excluir/escritor")
@@ -49,7 +57,7 @@ class MangaController (
             val escritor = manga.escritores.firstOrNull { escritor-> escritor.id == dadosEscritor.idEscritor }
 
             if (escritor!= null) {
-                manga.escritores.removeIf { escritor.id == dadosEscritor.idEscritor}
+                manga.escritores.removeIf { escritor -> escritor.id == dadosEscritor.idEscritor}
             }
             else{
                 mensagemEscritor = "Escritor(a) não encontrado!"
@@ -68,10 +76,10 @@ class MangaController (
         var mensagemEditora = "Editora excluída com sucesso!"
 
         if (manga != null){
-            val editora = manga.editoras.firstOrNull { editora-> editora.id == dadosEditora.idEditora }
+            val editora = manga.editoras.firstOrNull { editora -> editora.id == dadosEditora.idEditora }
 
             if (editora != null) {
-                manga.editoras.removeIf { editora.id == dadosEditora.idEditora}
+                manga.editoras.removeIf { editora -> editora.id == dadosEditora.idEditora}
             }
             else{
                 mensagemEditora = "Editora não encontrada!"
