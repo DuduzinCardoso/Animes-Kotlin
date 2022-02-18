@@ -46,28 +46,48 @@ class AnimeController(
         return "Anime excluído com sucesso!"
     }
 
-    @DeleteMapping("/excluir/criador/{idAnime}/{idCriador}")
-    fun deleteCriador(
-        @PathVariable("idCriador") idCriador: UUID,
-        @PathVariable("idAnime") idAnime: UUID
-    ): String {
-        animesDtos
-            .firstOrNull { animeDto -> animeDto.id == idAnime }!!
-            .criadores.removeIf { criador -> criador.id == idCriador }
+    @DeleteMapping("/excluir/criador")
+    fun deleteCriador(@RequestBody dadosCriador: DeleteCriadorRequestDto): String {
 
-        return "Criador excluído com sucesso!"
+        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosCriador.idAnime }
+        var mensagemCriador = "Criador(a) excluído com sucesso!"
+
+        if (anime!= null){
+            val criador = anime.criadores.firstOrNull { criador -> criador.id == dadosCriador.idCriador }
+
+            if (criador != null) {
+                anime.criadores.removeIf { criador.id == dadosCriador.idCriador}
+            }
+            else{
+                mensagemCriador = "Criador(a) não encontrado!"
+            }
+        } else{
+            mensagemCriador = "Anime não encontrado!"
+        }
+
+        return mensagemCriador
     }
 
-    @DeleteMapping("/excluir/personagem/{idAnime}/{idPersonagem}")
-    fun deletePersonagem(
-        @PathVariable("idPersonagem") idPersonagem: UUID,
-        @PathVariable("idAnime") idAnime: UUID
-    ): String {
-        animesDtos
-            .firstOrNull { animeDto -> animeDto.id == idAnime }!!
-            .personagens.removeIf { personagem -> personagem.id == idPersonagem }
+    @DeleteMapping("/excluir/personagem")
+    fun deletePersonagem(@RequestBody dadosPersonagem: DeletePersonagemRequestDto): String {
 
-        return "Personagem excluído com sucesso!"
+        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosPersonagem.idAnime }
+        var mensagemPersonagem = "Personagem excluído com sucesso!"
+
+        if (anime!= null){
+            val personagem = anime.personagens.firstOrNull { personagem-> personagem.id == dadosPersonagem.idPersonagem }
+
+            if (personagem != null) {
+                anime.personagens.removeIf { personagem.id == dadosPersonagem.idPersonagem}
+            }
+            else{
+                mensagemPersonagem = "Personagem não encontrado!"
+            }
+        } else{
+            mensagemPersonagem = "Anime não encontrado!"
+        }
+
+        return mensagemPersonagem
     }
 
     @PostMapping("/create/personagem/{idAnime}")
@@ -106,21 +126,45 @@ class AnimeController(
         }
         return "Criador ${criador.nome} criado com sucesso!"
     }
-    @PatchMapping("/update/{idAnime}/{novoNomeCriador}/{idCriador}")
-    fun updateCriador(
-        @PathVariable ("novoNomeCriador")novoNomeDoCriador: String,
-        @PathVariable("idCriador") idCriador: UUID,
-        @PathVariable("idAnime") idAnime: UUID
-    ): String {
-        val nomeDoAnime = animesDtos.firstOrNull { anime -> anime.id == idAnime }
-        val nomeDoCriador = nomeDoAnime!!.criadores.firstOrNull { criador -> criador.id == idCriador}
+    @PatchMapping("/update/personagem")
+    fun updatePersonagem(@RequestBody dadosPersonagem: UpdatePersonagemRequestDto): String {
+        var mensagemPersonagem = "Personagem atualizado com sucesso"
+        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosPersonagem.idAnime }
 
-            if (nomeDoCriador != null){
-                nomeDoCriador.nome = novoNomeDoCriador
+        if (anime != null) {
+            val personagem =anime.personagens.firstOrNull { personagem -> personagem.id == dadosPersonagem.idPersonagem }
+
+            if (personagem != null) {
+                personagem.nome = dadosPersonagem.nome
             }
-            else{
-                return "Criador não encontrado!"
+            else {
+                mensagemPersonagem = "Personagem não encontrado!"
             }
-        return "Criador atualizado com sucesso"
+        } else {
+            mensagemPersonagem = "Anime não encontrado!"
+        }
+
+        return mensagemPersonagem
+
+        }
+    @PatchMapping("/update/criador")
+    fun updateCriador(@RequestBody dadosCriador: UpdateCriadorRequestDto): String {
+        var mensagemCriador = "Criador(a) atualizado com sucesso"
+        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosCriador.idAnime}
+
+        if (anime != null) {
+            val criador = anime.criadores.firstOrNull { anime -> anime.id == dadosCriador.idCriador }
+
+            if (criador != null) {
+                criador.nome = dadosCriador.nome
+            }
+            else {
+                mensagemCriador = "Criador(a) não encontrado!"
+            }
+        } else {
+            mensagemCriador = "Anime não encontrado!"
+        }
+
+        return mensagemCriador
     }
 }

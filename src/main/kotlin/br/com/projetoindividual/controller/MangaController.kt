@@ -40,10 +40,10 @@ class MangaController (
     }
 
     @DeleteMapping("/excluir/escritor")
-    fun deleteEditora(@RequestBody dadosEscritor: DeleteEscritorRequestDto): String {
+    fun deleteEscritor(@RequestBody dadosEscritor: DeleteEscritorRequestDto): String {
 
         val manga = mangasDtos.firstOrNull { manga -> manga.id == dadosEscritor.idManga }
-        var mensagemEscritor = "Escritor(a) excluído(a) com sucesso!"
+        var mensagemEscritor = "Escritor(a) excluído com sucesso!"
 
         if (manga != null){
             val escritor = manga.escritores.firstOrNull { escritor-> escritor.id == dadosEscritor.idEscritor }
@@ -52,7 +52,7 @@ class MangaController (
                 manga.escritores.removeIf { escritor.id == dadosEscritor.idEscritor}
             }
             else{
-                mensagemEscritor = "Escritor(a) não encontrado(a)!"
+                mensagemEscritor = "Escritor(a) não encontrado!"
             }
         } else{
             mensagemEscritor = "Manga não encontrado!"
