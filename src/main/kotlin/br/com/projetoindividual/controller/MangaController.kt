@@ -94,10 +94,10 @@ class MangaController (
     @PostMapping("/create/escritor/{idManga}")
     fun createEscritor(@RequestBody escritor: EscritorRequestDto, @PathVariable("idManga")
     idManga: UUID): String{
-        val mangaPerso = mangasDtos.firstOrNull { manga -> manga.id== idManga}
+        val manga = mangasDtos.firstOrNull { manga -> manga.id== idManga}
 
-        if (mangaPerso != null){
-            mangaPerso.escritores.add(
+        if (manga!= null){
+            manga.escritores.add(
                 EscritorDto(
                     id = UUID.randomUUID(),
                     nome = escritor.nome,
