@@ -1,6 +1,12 @@
 package br.com.projetoindividual.controller
 
+import br.com.projetoindividual.domain.Anime
+import br.com.projetoindividual.domain.Criador
+import br.com.projetoindividual.domain.Personagem
 import br.com.projetoindividual.dto.*
+import br.com.projetoindividual.repository.AnimeRepository
+import br.com.projetoindividual.repository.CriadorRepository
+import br.com.projetoindividual.repository.PersonagemRepository
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -14,11 +20,43 @@ import java.util.UUID
 @RestController
 @RequestMapping("/animes")
 class AnimeController(
-    var animesDtos: ArrayList<AnimeDto>
+    var animesDtos: ArrayList<AnimeDto>,
+    val animeRepository: AnimeRepository,
+    val personagemRepository: PersonagemRepository,
+    val criadorRepository: CriadorRepository,
 ) {
     @GetMapping("/get-animes")
     fun getListAnimes(): List<AnimeDto> {
-        return animesDtos
+        return animeRepository.findAll()
+            .map { anime ->
+                AnimeDto(
+                    id = anime.id,
+                    nome = anime.nome,
+                    personagens = personagemRepository.findByIdAnime(anime.id)
+                        .map { personagem ->
+                            PersonagemDto(
+                                id = personagem.id,
+                                nome = personagem.nome,
+                                genero = personagem.genero
+                            )
+                        } as ArrayList<PersonagemDto>,
+                    criadores = criadorRepository.findByIdAnime(anime.id)
+                        .map { criador ->
+                            CriadorDto(
+                                id = criador.id,
+                                nome = criador.nome,
+                                nascimento = criador.nascimento
+                            )
+                        } as ArrayList<CriadorDto>
+                )
+            }
+    }
+
+    @PostMapping("/anime/create")
+    fun createAnime(@RequestBody anime: AnimeRequestDto): String {
+        animeRepository.save(Anime(nome = anime.nome.trim()))
+
+        return "Anime ${anime.nome.trim()} criado com sucesso!"
     }
 
     @GetMapping("/info/anime/{nome}")
@@ -26,153 +64,86 @@ class AnimeController(
         return animesDtos.firstOrNull { anime -> anime.nome == nome }
     }
 
-    @PostMapping("/anime/create")
-    fun createAnime(@RequestBody anime: AnimeRequestDto): String {
-        animesDtos.add(
-            AnimeDto(
-                id = UUID.randomUUID(),
-                nome = anime.nome.trim(),
-                personagens = ArrayList(),
-                criadores = ArrayList()
-            )
-        )
-
-        return "Anime ${anime.nome.trim()} criado com sucesso!"
-    }
-
-    @DeleteMapping("/excluir/{idAnime}")
-    fun deleteAnime(@PathVariable("idAnime") idAnime: UUID): String?{
-        var mensagemAnime = "Anime excluído com sucesso!"
-        val anime = animesDtos.firstOrNull { anime -> anime.id == idAnime }
-
-        if(anime != null){
-            animesDtos.removeIf { anime -> anime.id == idAnime }
-        }else{
-            mensagemAnime = "Anime não encontrado!"
+    @DeleteMapping("/deletar/anime/{idAnime}")
+    fun deleteAnime(@PathVariable("idAnime") idAnime: Long): String? {
+        var mensagem = "Anime deletado com sucesso!"
+        try {
+            animeRepository.deleteById(idAnime)
+        } catch (exception: Exception) {
+            mensagem = "Falha ao deletar anime, por favor, tente novamente!"
         }
 
-        return mensagemAnime
+        return mensagem
     }
 
-    @DeleteMapping("/excluir/criador")
-    fun deleteCriador(@RequestBody dadosCriador: DeleteCriadorRequestDto): String {
-
-        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosCriador.idAnime }
-        var mensagemCriador = "Criador(a) excluído com sucesso!"
-
-        if (anime!= null){
-            val criador = anime.criadores.firstOrNull { criador -> criador.id == dadosCriador.idCriador }
-
-            if (criador != null) {
-                anime.criadores.removeIf { criador -> criador.id == dadosCriador.idCriador}
-            }
-            else{
-                mensagemCriador = "Criador(a) não encontrado!"
-            }
-        } else{
-            mensagemCriador = "Anime não encontrado!"
+    @DeleteMapping("/deletar/criador/{idCriador}")
+    fun deleteCriador(@PathVariable idCriador: Long): String {
+        var mensagem = "Criador deletado com sucesso!"
+        try {
+            criadorRepository.deleteById(idCriador)
+        } catch (exception: Exception) {
+            mensagem = "Falha ao deletar criador, por favor, tente novamente!"
         }
 
-        return mensagemCriador
+        return mensagem
     }
 
-    @DeleteMapping("/excluir/personagem")
-    fun deletePersonagem(@RequestBody dadosPersonagem: DeletePersonagemRequestDto): String {
-
-        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosPersonagem.idAnime }
-        var mensagemPersonagem = "Personagem excluído com sucesso!"
-
-        if (anime!= null){
-            val personagem = anime.personagens.firstOrNull { personagem-> personagem.id == dadosPersonagem.idPersonagem }
-
-            if (personagem != null) {
-                anime.personagens.removeIf { personagem -> personagem.id == dadosPersonagem.idPersonagem }
-            }
-            else{
-                mensagemPersonagem = "Personagem não encontrado!"
-            }
-        } else{
-            mensagemPersonagem = "Anime não encontrado!"
+    @DeleteMapping("/deletar/personagem/{idPersonagem}")
+    fun deletePersonagem(@PathVariable idPersonagem: Long): String {
+        var mensagem = "Personagem deletado com sucesso!"
+        try {
+            personagemRepository.deleteById(idPersonagem)
+        } catch (exception: Exception) {
+            mensagem = "Falha ao deletar personagem, por favor, tente novamente!"
         }
 
-        return mensagemPersonagem
+        return mensagem
     }
 
     @PostMapping("/create/personagem/{idAnime}")
-    fun createPersonagem(@RequestBody personagem: PersonagemRequestDto, @PathVariable("idAnime")
-    idAnime: UUID): String {
-        val animeF = animesDtos.firstOrNull { anime -> anime.id == idAnime }
+    fun createPersonagem(
+        @RequestBody personagem: PersonagemRequestDto, @PathVariable("idAnime")
+        idAnime: Long
+    ): String {
+        var anime = animeRepository.getById(idAnime)
 
-        if (animeF != null) {
-            animeF.personagens.add(
-                PersonagemDto(
-                    id = UUID.randomUUID(),
+        if (anime != null) {
+            personagemRepository.save(
+                Personagem(
+                    anime = anime,
                     nome = personagem.nome,
-                    genero = personagem.genero,
+                    genero = personagem.genero
                 )
             )
-        } else {
-            return "Anime não encontrado!"
         }
 
         return "Personagem ${personagem.nome} criado com sucesso!"
     }
-    @PostMapping("/create/criador/{idAnime}")
-    fun createCriador(@RequestBody criador: CriadorRequestDto, @PathVariable("idAnime") idAnime: UUID): String{
-        val animeCreate = animesDtos.firstOrNull { anime -> anime.id == idAnime}
 
-        if (animeCreate == null) {
-            return "Anime não encontrado!"
-        } else {
-            animeCreate.criadores.add(
-                CriadorDto(
-                    id = UUID.randomUUID(),
+    @PostMapping("/create/criador/{idAnime}")
+    fun createCriador(@RequestBody criador: CriadorRequestDto, @PathVariable("idAnime") idAnime: Long): String {
+        var anime = animeRepository.getById(idAnime)
+
+        if (anime != null) {
+            criadorRepository.save(
+                Criador(
+                    anime = anime,
                     nome = criador.nome,
-                    nascimento = criador.nascimento,
+                    nascimento = criador.nascimento
                 )
             )
         }
+
         return "Criador ${criador.nome} criado com sucesso!"
     }
+
     @PatchMapping("/update/personagem")
     fun updatePersonagem(@RequestBody dadosPersonagem: UpdatePersonagemRequestDto): String {
-        var mensagemPersonagem = "Personagem atualizado com sucesso"
-        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosPersonagem.idAnime }
+        return ""
+    }
 
-        if (anime != null) {
-            val personagem =anime.personagens.firstOrNull { personagem -> personagem.id == dadosPersonagem.idPersonagem }
-
-            if (personagem != null) {
-                personagem.nome = dadosPersonagem.nome
-            }
-            else {
-                mensagemPersonagem = "Personagem não encontrado!"
-            }
-        } else {
-            mensagemPersonagem = "Anime não encontrado!"
-        }
-
-        return mensagemPersonagem
-
-        }
     @PatchMapping("/update/criador")
     fun updateCriador(@RequestBody dadosCriador: UpdateCriadorRequestDto): String {
-        var mensagemCriador = "Criador(a) atualizado com sucesso"
-        val anime = animesDtos.firstOrNull { anime -> anime.id == dadosCriador.idAnime}
-
-        if (anime != null) {
-            val criador = anime.criadores.firstOrNull { anime -> anime.id == dadosCriador.idCriador }
-
-            if (criador != null) {
-                criador.nome = dadosCriador.nome
-            }
-            else {
-                mensagemCriador = "Criador(a) não encontrado!"
-            }
-        } else {
-            mensagemCriador = "Anime não encontrado!"
-        }
-
-        return mensagemCriador
+        return ""
     }
 }

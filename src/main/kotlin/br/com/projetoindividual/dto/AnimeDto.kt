@@ -3,8 +3,8 @@ package br.com.projetoindividual.dto
 import java.util.UUID
 
 data class AnimeDto(
-    var id: UUID,
+    var id: Long? = null,
     var nome: String,
-    var personagens: ArrayList<PersonagemDto>,
-    var criadores: ArrayList<CriadorDto>,
+    var personagens: ArrayList<PersonagemDto> ? = null,
+    var criadores: ArrayList<CriadorDto>? = null,
 )
