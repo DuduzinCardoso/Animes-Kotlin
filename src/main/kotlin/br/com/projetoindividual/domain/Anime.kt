@@ -12,5 +12,5 @@ class Anime (
     @Column(name = "nome")
     val nome: String,
 ) {
-    private constructor(): this(0, "")
+    private constructor(): this(null, "")
 }

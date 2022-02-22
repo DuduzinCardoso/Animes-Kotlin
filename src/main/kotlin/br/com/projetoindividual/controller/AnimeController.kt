@@ -7,6 +7,7 @@ import br.com.projetoindividual.dto.*
 import br.com.projetoindividual.repository.AnimeRepository
 import br.com.projetoindividual.repository.CriadorRepository
 import br.com.projetoindividual.repository.PersonagemRepository
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -15,12 +16,12 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import java.util.*
+import kotlin.collections.ArrayList
 
 @RestController
 @RequestMapping("/animes")
 class AnimeController(
-    var animesDtos: ArrayList<AnimeDto>,
     val animeRepository: AnimeRepository,
     val personagemRepository: PersonagemRepository,
     val criadorRepository: CriadorRepository,
@@ -39,7 +40,7 @@ class AnimeController(
                                 nome = personagem.nome,
                                 genero = personagem.genero
                             )
-                        } as ArrayList<PersonagemDto>,
+                        },
                     criadores = criadorRepository.findByIdAnime(anime.id)
                         .map { criador ->
                             CriadorDto(
@@ -47,7 +48,7 @@ class AnimeController(
                                 nome = criador.nome,
                                 nascimento = criador.nascimento
                             )
-                        } as ArrayList<CriadorDto>
+                        }
                 )
             }
     }
@@ -59,9 +60,40 @@ class AnimeController(
         return "Anime ${anime.nome.trim()} criado com sucesso!"
     }
 
-    @GetMapping("/info/anime/{nome}")
-    fun getAnime(@PathVariable("nome") nome: String): AnimeDto? {
-        return animesDtos.firstOrNull { anime -> anime.nome == nome }
+    @GetMapping("/info/anime/{id}")
+    fun getAnime(@PathVariable("id") id: Long): ResponseEntity<AnimeDto> {
+        try {
+            val anime = animeRepository.getById(id)
+
+            if (anime != null) {
+                return ResponseEntity.ok(
+                    AnimeDto(
+                        id = anime.id,
+                        nome = anime.nome,
+                        personagens = personagemRepository.findByIdAnime(anime.id)
+                            .map { personagem ->
+                                PersonagemDto(
+                                    id = personagem.id,
+                                    nome = personagem.nome,
+                                    genero = personagem.genero
+                                )
+                            },
+                        criadores = criadorRepository.findByIdAnime(anime.id)
+                            .map { criador ->
+                                CriadorDto(
+                                    id = criador.id,
+                                    nome = criador.nome,
+                                    nascimento = criador.nascimento
+                                )
+                            }
+                    )
+                )
+            }
+        } catch (exception: Exception) {
+            println(exception.message)
+        }
+
+        return ResponseEntity.notFound().build()
     }
 
     @DeleteMapping("/deletar/anime/{idAnime}")
