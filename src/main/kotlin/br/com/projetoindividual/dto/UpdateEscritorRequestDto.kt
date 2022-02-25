@@ -1,9 +1,11 @@
 package br.com.projetoindividual.dto
 
+import java.util.Date
 import java.util.UUID
 
 data class UpdateEscritorRequestDto(
-    val idManga: UUID,
-    val idEscritor: UUID,
+    val id: Long,
     val nome: String,
+    val nascimento: Date,
+    val genero: Char,
 )

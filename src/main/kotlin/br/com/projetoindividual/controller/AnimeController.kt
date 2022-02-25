@@ -137,45 +137,76 @@ class AnimeController(
         @RequestBody personagem: PersonagemRequestDto, @PathVariable("idAnime")
         idAnime: Long
     ): String {
-        var anime = animeRepository.getById(idAnime)
+        var mensagem = "Anime não encontrado"
 
-        if (anime != null) {
-            personagemRepository.save(
-                Personagem(
-                    anime = anime,
-                    nome = personagem.nome,
-                    genero = personagem.genero
+        try {
+            val anime = animeRepository.getById(idAnime)
+
+            if (anime != null) {
+                personagemRepository.save(
+                    Personagem(
+                        anime = anime,
+                        nome = personagem.nome,
+                        genero = personagem.genero
+                    )
                 )
-            )
+
+                mensagem = "Personagem ${personagem.nome} criado com sucesso!"
+            }
+        } catch (exception: Exception) {
+            println(exception.message)
         }
 
-        return "Personagem ${personagem.nome} criado com sucesso!"
+        return mensagem
     }
 
     @PostMapping("/create/criador/{idAnime}")
     fun createCriador(@RequestBody criador: CriadorRequestDto, @PathVariable("idAnime") idAnime: Long): String {
-        var anime = animeRepository.getById(idAnime)
+        var mensagem = "Criador ${criador.nome} criado com sucesso!"
+        try {
+            val anime = animeRepository.getById(idAnime)
 
-        if (anime != null) {
-            criadorRepository.save(
-                Criador(
-                    anime = anime,
-                    nome = criador.nome,
-                    nascimento = criador.nascimento
+            if (anime != null) {
+                criadorRepository.save(
+                    Criador(
+                        anime = null,
+                        nome = criador.nome,
+                        nascimento = criador.nascimento
+                    )
                 )
-            )
+            }
+        } catch (exception: Exception) {
+            mensagem = "Falha ao cadastrar criador!"
         }
 
-        return "Criador ${criador.nome} criado com sucesso!"
+        return mensagem
     }
 
     @PatchMapping("/update/personagem")
     fun updatePersonagem(@RequestBody dadosPersonagem: UpdatePersonagemRequestDto): String {
-        return ""
+        var mensagem = "Personagem atualizado com sucesso!"
+
+        try {
+            personagemRepository.update(dadosPersonagem.id, dadosPersonagem.nome, dadosPersonagem.genero)
+
+        } catch (exception: Exception) {
+            mensagem = "Falha ao atualizar personagem: ${exception.message}"
+            println(exception)
+        }
+
+        return mensagem
     }
 
     @PatchMapping("/update/criador")
     fun updateCriador(@RequestBody dadosCriador: UpdateCriadorRequestDto): String {
-        return ""
+       var mensagem = "Criador atualizado com sucesso!"
+
+        try {
+            criadorRepository.update(dadosCriador.id, dadosCriador.nome, dadosCriador.nascimento)
+        } catch (exception: Exception){
+            mensagem = "Falha ao atualizar criador: ${exception.message}"
+            println(exception)
+        }
+        return mensagem
     }
 }

@@ -10,7 +10,7 @@ class Personagem (
     val id: Long? = null,
 
     @OneToOne
-    @JoinColumn(name = "animeId", referencedColumnName = "id")
+    @JoinColumn(name = "anime_id", referencedColumnName = "id")
     val anime: Anime? = null,
 
     val nome: String? = null,

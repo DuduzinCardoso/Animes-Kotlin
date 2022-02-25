@@ -3,8 +3,8 @@ package br.com.projetoindividual.dto
 import java.util.*
 
 data class EditoraDto(
-    var id: UUID,
-    var nome: String,
-    var pais: String,
-    val fundada: Date,
+    var id: Long? = null,
+    var nome: String? = null,
+    var pais: String? = null,
+    val fundada: Date? = null,
 )

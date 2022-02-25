@@ -4,8 +4,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 data class MangaDto(
-    var id: UUID,
+    var id: Long? = null,
     var nome: String,
-    var editoras: ArrayList<EditoraDto>,
-    var escritores: ArrayList<EscritorDto>,
+    var editoras: List<EditoraDto>? = null,
+    var escritores: List<EscritorDto>? = null,
 )

@@ -11,10 +11,11 @@ class Criador (
     val id: Long? = null,
 
     @OneToOne
+    @JoinColumn(name = "anime_id", referencedColumnName = "id")
     val anime: Anime? = null,
 
     var nome: String? = null,
     val nascimento: Date? = null,
 ) {
-    private constructor(): this(null, null, null, null)
+    private constructor(): this(null, null, null, null )
 }

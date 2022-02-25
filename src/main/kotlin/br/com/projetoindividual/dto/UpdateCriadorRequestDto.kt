@@ -3,7 +3,9 @@ package br.com.projetoindividual.dto
 import java.util.*
 
 data class UpdateCriadorRequestDto(
-    val idAnime: UUID,
-    val idCriador: UUID,
+    val id: Long,
     val nome: String,
-)
+    val nascimento: Date,
+) {
+
+}
