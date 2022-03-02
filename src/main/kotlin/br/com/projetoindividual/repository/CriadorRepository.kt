@@ -23,7 +23,7 @@ interface CriadorRepository : JpaRepository<Criador, Long> {
     @Transactional
     @Query(value =
     """
-        UPDATE public.personagens
+        UPDATE public.criadores
         SET nome = :nome, nascimento = :nascimento
         WHERE id = :id
         """

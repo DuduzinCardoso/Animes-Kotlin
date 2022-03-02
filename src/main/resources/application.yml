@@ -1,7 +1,7 @@
 server:
   port: ${SERVER_PORT:8080}
   servlet:
-    context-path: ${CONTEXT_PATH:/anime}
+    context-path: ${CONTEXT_PATH:/service}
 
 spring:
   application:

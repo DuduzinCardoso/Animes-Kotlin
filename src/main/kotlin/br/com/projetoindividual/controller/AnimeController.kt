@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -20,47 +21,57 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 @RestController
-@RequestMapping("/animes")
+@RequestMapping("/anime")
 class AnimeController(
     val animeRepository: AnimeRepository,
     val personagemRepository: PersonagemRepository,
     val criadorRepository: CriadorRepository,
 ) {
-    @GetMapping("/get-animes")
-    fun getListAnimes(): List<AnimeDto> {
-        return animeRepository.findAll()
-            .map { anime ->
-                AnimeDto(
-                    id = anime.id,
-                    nome = anime.nome,
-                    personagens = personagemRepository.findByIdAnime(anime.id)
-                        .map { personagem ->
-                            PersonagemDto(
-                                id = personagem.id,
-                                nome = personagem.nome,
-                                genero = personagem.genero
-                            )
-                        },
-                    criadores = criadorRepository.findByIdAnime(anime.id)
-                        .map { criador ->
-                            CriadorDto(
-                                id = criador.id,
-                                nome = criador.nome,
-                                nascimento = criador.nascimento
-                            )
-                        }
-                )
-            }
+    @GetMapping("/animes")
+    fun getListAnimes(): ResponseEntity<List<AnimeDto>> {
+        try {
+            return ResponseEntity.ok(animeRepository.findAll()
+                .map { anime ->
+                    AnimeDto(
+                        id = anime.id,
+                        nome = anime.nome,
+                        personagens = personagemRepository.findByIdAnime(anime.id)
+                            .map { personagem ->
+                                PersonagemDto(
+                                    id = personagem.id,
+                                    nome = personagem.nome,
+                                    genero = personagem.genero
+                                )
+                            },
+                        criadores = criadorRepository.findByIdAnime(anime.id)
+                            .map { criador ->
+                                CriadorDto(
+                                    id = criador.id,
+                                    nome = criador.nome,
+                                    nascimento = criador.nascimento
+                                )
+                            }
+                    )
+                })
+        } catch (exception: Exception) {
+            return ResponseEntity.notFound().build()
+        }
     }
 
-    @PostMapping("/anime/create")
+    @PostMapping("/create")
     fun createAnime(@RequestBody anime: AnimeRequestDto): String {
-        animeRepository.save(Anime(nome = anime.nome.trim()))
+        var mensagem = "Anime ${anime.nome.trim()} criado com sucesso!"
 
-        return "Anime ${anime.nome.trim()} criado com sucesso!"
+        try {
+            animeRepository.save(Anime(nome = anime.nome.trim()))
+        } catch (exception: Exception) {
+            mensagem = "Falha ao cadastrar anime!"
+        }
+
+        return mensagem
     }
 
-    @GetMapping("/info/anime/{id}")
+    @GetMapping("/{id}")
     fun getAnime(@PathVariable("id") id: Long): ResponseEntity<AnimeDto> {
         try {
             val anime = animeRepository.getById(id)
@@ -96,51 +107,14 @@ class AnimeController(
         return ResponseEntity.notFound().build()
     }
 
-    @DeleteMapping("/deletar/anime/{idAnime}")
-    fun deleteAnime(@PathVariable("idAnime") idAnime: Long): String? {
-        var mensagem = "Anime deletado com sucesso!"
-        try {
-            animeRepository.deleteById(idAnime)
-        } catch (exception: Exception) {
-            mensagem = "Falha ao deletar anime, por favor, tente novamente!"
-        }
-
-        return mensagem
-    }
-
-    @DeleteMapping("/deletar/criador/{idCriador}")
-    fun deleteCriador(@PathVariable idCriador: Long): String {
-        var mensagem = "Criador deletado com sucesso!"
-        try {
-            criadorRepository.deleteById(idCriador)
-        } catch (exception: Exception) {
-            mensagem = "Falha ao deletar criador, por favor, tente novamente!"
-        }
-
-        return mensagem
-    }
-
-    @DeleteMapping("/deletar/personagem/{idPersonagem}")
-    fun deletePersonagem(@PathVariable idPersonagem: Long): String {
-        var mensagem = "Personagem deletado com sucesso!"
-        try {
-            personagemRepository.deleteById(idPersonagem)
-        } catch (exception: Exception) {
-            mensagem = "Falha ao deletar personagem, por favor, tente novamente!"
-        }
-
-        return mensagem
-    }
-
-    @PostMapping("/create/personagem/{idAnime}")
+    @PostMapping("/personagem")
     fun createPersonagem(
-        @RequestBody personagem: PersonagemRequestDto, @PathVariable("idAnime")
-        idAnime: Long
+        @RequestBody personagem: PersonagemRequestDto
     ): String {
         var mensagem = "Anime não encontrado"
 
         try {
-            val anime = animeRepository.getById(idAnime)
+            val anime = animeRepository.getById(personagem.idAnime)
 
             if (anime != null) {
                 personagemRepository.save(
@@ -160,16 +134,17 @@ class AnimeController(
         return mensagem
     }
 
-    @PostMapping("/create/criador/{idAnime}")
-    fun createCriador(@RequestBody criador: CriadorRequestDto, @PathVariable("idAnime") idAnime: Long): String {
+    @PostMapping("/criador")
+    fun createCriador(@RequestBody criador: CriadorRequestDto): String {
         var mensagem = "Criador ${criador.nome} criado com sucesso!"
+
         try {
-            val anime = animeRepository.getById(idAnime)
+            val anime = animeRepository.getById(criador.idAnime)
 
             if (anime != null) {
                 criadorRepository.save(
                     Criador(
-                        anime = null,
+                        anime = anime,
                         nome = criador.nome,
                         nascimento = criador.nascimento
                     )
@@ -182,7 +157,7 @@ class AnimeController(
         return mensagem
     }
 
-    @PatchMapping("/update/personagem")
+    @PutMapping("/personagem")
     fun updatePersonagem(@RequestBody dadosPersonagem: UpdatePersonagemRequestDto): String {
         var mensagem = "Personagem atualizado com sucesso!"
 
@@ -190,23 +165,63 @@ class AnimeController(
             personagemRepository.update(dadosPersonagem.id, dadosPersonagem.nome, dadosPersonagem.genero)
 
         } catch (exception: Exception) {
-            mensagem = "Falha ao atualizar personagem: ${exception.message}"
+            mensagem = "Falha ao atualizar personagem!"
             println(exception)
         }
 
         return mensagem
     }
 
-    @PatchMapping("/update/criador")
+    @PutMapping("/criador")
     fun updateCriador(@RequestBody dadosCriador: UpdateCriadorRequestDto): String {
        var mensagem = "Criador atualizado com sucesso!"
 
         try {
             criadorRepository.update(dadosCriador.id, dadosCriador.nome, dadosCriador.nascimento)
         } catch (exception: Exception){
-            mensagem = "Falha ao atualizar criador: ${exception.message}"
+            mensagem = "Falha ao atualizar criador!"
             println(exception)
         }
+
+        return mensagem
+    }
+
+    @DeleteMapping("/{idAnime}")
+    fun deleteAnime(@PathVariable("idAnime") idAnime: Long): String? {
+        var mensagem = "Anime deletado com sucesso!"
+
+        try {
+            animeRepository.deleteById(idAnime)
+        } catch (exception: Exception) {
+            mensagem = "Falha ao deletar anime, por favor, tente novamente!"
+        }
+
+        return mensagem
+    }
+
+    @DeleteMapping("/criador/{idCriador}")
+    fun deleteCriador(@PathVariable idCriador: Long): String {
+        var mensagem = "Criador deletado com sucesso!"
+
+        try {
+            criadorRepository.deleteById(idCriador)
+        } catch (exception: Exception) {
+            mensagem = "Falha ao deletar criador, por favor, tente novamente!"
+        }
+
+        return mensagem
+    }
+
+    @DeleteMapping("/personagem/{idPersonagem}")
+    fun deletePersonagem(@PathVariable idPersonagem: Long): String {
+        var mensagem = "Personagem deletado com sucesso!"
+
+        try {
+            personagemRepository.deleteById(idPersonagem)
+        } catch (exception: Exception) {
+            mensagem = "Falha ao deletar personagem, por favor, tente novamente!"
+        }
+
         return mensagem
     }
 }
