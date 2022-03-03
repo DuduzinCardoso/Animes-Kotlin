@@ -13,43 +13,47 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 @RestController
-@RequestMapping("/mangas")
+@RequestMapping("/manga")
 class MangaController (
     val mangaRepository: MangaRepository,
     val editoraRepository: EditoraRepository,
     val escritorRepository: EscritorRepository,
 ) {
-    @GetMapping("/get-mangas")
-    fun getListMangas(): List<MangaDto> {
+    @GetMapping("/mangas")
+    fun getListMangas(): ResponseEntity<List<MangaDto>> {
+        try {
+            return ResponseEntity.ok(mangaRepository.findAll()
+                .map { manga ->
+                    MangaDto(
+                        id = manga.id,
+                        nome = manga.nome,
+                        editoras = editoraRepository.findByIdManga(manga.id)
+                            .map { editora ->
+                                EditoraDto(
+                                    id = editora.id,
+                                    nome = editora.nome,
+                                    pais = editora.pais,
+                                    fundada = editora.fundada
+                                )
+                            },
+                        escritores = escritorRepository.findByIdManga(manga.id)
+                            .map { escritor ->
+                                EscritorDto(
+                                    id = escritor.id,
+                                    nome = escritor.nome,
+                                    nascimento = escritor.nascimento,
+                                    genero = escritor.genero
+                                )
+                            }
+                    )
+                })
+        }catch (exception: Exception){
+            return ResponseEntity.notFound().build()
+        }
 
-        return mangaRepository.findAll()
-            .map { manga ->
-                MangaDto(
-                    id = manga.id,
-                    nome = manga.nome,
-                    editoras = editoraRepository.findByIdManga(manga.id)
-                        .map { editora ->
-                            EditoraDto(
-                                id = editora.id,
-                                nome = editora.nome,
-                                pais = editora.pais,
-                                fundada = editora.fundada
-                            )
-                        },
-                    escritores = escritorRepository.findByIdManga(manga.id)
-                        .map { escritor ->
-                            EscritorDto(
-                                id = escritor.id,
-                                nome = escritor.nome,
-                                nascimento = escritor.nascimento,
-                                genero = escritor.genero
-                            )
-                        }
-                )
-            }
     }
 
-    @GetMapping("/info/manga/{id}")
+    @GetMapping("{id}")
     fun getManga(@PathVariable("id") id: Long): ResponseEntity<MangaDto> {
         try {
             val manga = mangaRepository.getById(id)
@@ -87,16 +91,23 @@ class MangaController (
         return ResponseEntity.notFound().build()
     }
 
-    @PostMapping("/manga/create")
+    @PostMapping("/create")
     fun createManga(@RequestBody manga: MangaRequestDto): String {
-        mangaRepository.save(Manga(nome = manga.nome.trim()))
+        var mensagem = "Manga ${manga.nome.trim()} criado com sucesso!"
 
-        return "Manga ${manga.nome.trim()} criado com sucesso!"
+        try{
+            mangaRepository.save(Manga(nome = manga.nome.trim()))
+        } catch (exception: Exception) {
+            mensagem = "Falha ao cadastrar manga!"
+        }
+
+        return mensagem
     }
 
-    @DeleteMapping("/deletar/manga/{idManga}")
+    @DeleteMapping("/{idManga}")
     fun deleteManga(@PathVariable("idManga") idManga: Long): String? {
         var mensagem = "Manga deletado com sucesso!"
+
         try {
             mangaRepository.deleteById(idManga)
         } catch (exception: Exception) {
@@ -106,9 +117,10 @@ class MangaController (
         return mensagem
     }
 
-    @DeleteMapping("/deletar/editora/{idEditora}")
-    fun deleteEditora(@PathVariable("idEditora") idEditora: Long): String? {
+    @DeleteMapping("/editora/{idEditora}")
+    fun deleteEditora(@PathVariable idEditora: Long): String? {
         var mensagem = "Editora deletado com sucesso!"
+
         try {
             editoraRepository.deleteById(idEditora)
         } catch (exception: Exception){
@@ -118,9 +130,10 @@ class MangaController (
         return mensagem
     }
 
-    @DeleteMapping("/deletar/escritor/{idEscritor}")
-    fun deleteEscritor(@PathVariable("idEscritor") idEscritor: Long): String? {
+    @DeleteMapping("/escritor/{idEscritor}")
+    fun deleteEscritor(@PathVariable idEscritor: Long): String {
         var mensagem = "Escritor(a) deletado com sucesso!"
+
         try {
             escritorRepository.deleteById(idEscritor)
         } catch (exception: Exception){
@@ -130,14 +143,13 @@ class MangaController (
         return mensagem
     }
 
-    @PostMapping("/create/escritor/{idManga}")
+    @PostMapping("/escritor")
     fun createEscritor(
-        @RequestBody escritor: EscritorRequestDto, @PathVariable("idManga")
-        idManga: Long): String{
-        var mensagem = "Manga não encontrado!"
+        @RequestBody escritor: EscritorRequestDto): String{
+        var mensagem = "Escritor ${escritor.nome} criado com sucesso!"
 
         try {
-            val manga = mangaRepository.getById(idManga)
+            val manga = mangaRepository.getById(escritor.idManga)
 
             if (manga != null){
                 escritorRepository.save(
@@ -148,22 +160,21 @@ class MangaController (
                         genero = escritor.genero,
                     )
                 )
-                mensagem = "Escritor(a) ${escritor.nome} criado com sucesso!"
             }
         } catch (exception: Exception){
-            println(exception.message)
+            mensagem = "Falha ao cadastrar escritor!"
         }
 
         return mensagem
     }
 
-    @PostMapping("/create/editora/{idManga}")
-    fun createEditora(@RequestBody editora: EditoraRequestDto, @PathVariable("idManga")
-    idManga: Long): String{
-      var mensagem = "Manga não encontrado"
+    @PostMapping("/editora")
+    fun createEditora(@RequestBody editora: EditoraRequestDto
+    ): String{
+      var mensagem = "Editora ${editora.nome} criado com sucesso!"
 
       try {
-          val manga = mangaRepository.getById(idManga)
+          val manga = mangaRepository.getById(editora.idManga)
 
           if (manga != null){
               editoraRepository.save(
@@ -174,15 +185,14 @@ class MangaController (
                       fundada = editora.fundada
                   )
               )
-              mensagem = "Editora ${editora.nome} criado com sucesso!"
           }
       } catch (exception: Exception){
-          println(exception.message)
+          mensagem = "Falha ao cadastrar editora!"
       }
         return mensagem
     }
 
-    @PatchMapping("/update/editora")
+    @PutMapping("/editora")
     fun updateEditora(@RequestBody dadosEditora: UpdateEditoraRequestDto): String{
         var mensagem = "Editora atualizada com sucesso!"
 
@@ -199,7 +209,7 @@ class MangaController (
         }
         return mensagem
     }
-        @PatchMapping("/update/escritor")
+    @PutMapping("/escritor")
     fun updateEscritor(@RequestBody dadosEscritor: UpdateEscritorRequestDto): String {
         var mensagem = "Escritor atualizado com sucesso!"
 
