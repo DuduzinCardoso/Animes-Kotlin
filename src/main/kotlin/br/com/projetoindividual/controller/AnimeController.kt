@@ -8,6 +8,7 @@ import br.com.projetoindividual.repository.AnimeRepository
 import br.com.projetoindividual.repository.CriadorRepository
 import br.com.projetoindividual.repository.PersonagemRepository
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.*
 import kotlin.collections.ArrayList
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/anime")
 class AnimeController(
@@ -27,6 +29,8 @@ class AnimeController(
     val personagemRepository: PersonagemRepository,
     val criadorRepository: CriadorRepository,
 ) {
+
+    @CrossOrigin(origins = ["/*", "*", "**"])
     @GetMapping("/animes")
     fun getListAnimes(): ResponseEntity<List<AnimeDto>> {
         try {

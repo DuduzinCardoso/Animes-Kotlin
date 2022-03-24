@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 import kotlin.collections.ArrayList
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/manga")
 class MangaController (
@@ -91,7 +92,7 @@ class MangaController (
         return ResponseEntity.notFound().build()
     }
 
-    @PostMapping("/create")
+    @GetMapping("/create")
     fun createManga(@RequestBody manga: MangaRequestDto): String {
         var mensagem = "Manga ${manga.nome.trim()} criado com sucesso!"
 
